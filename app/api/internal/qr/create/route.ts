@@ -6,16 +6,33 @@ import EmergencyProfile from "../../../../models/EmergencyProfile";
 import { generateQRId } from "../../../../lib/uuid";
 
 export async function POST(req: NextRequest) {
+  const user = requireAuth(req);
   try {
-    const user = requireAuth(req);
-
     await connectDB();
 
+    const existingQR = await QRCode.findOne({
+      ownerId: user.userId,
+      status: "ACTIVE",
+    }).lean();
+
+    if (existingQR) {
+      return NextResponse.json(
+        {
+          qrCode: existingQR.code,
+          qrUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/q/${existingQR.code}`,
+          message: "QR already exists",
+        },
+        { status: 200 },
+      );
+    }
+
+    // 2️⃣ Create new QR
     const qrCode = generateQRId();
 
     await QRCode.create({
       code: qrCode,
       ownerId: user.userId,
+      status: "ACTIVE",
     });
 
     await EmergencyProfile.create({
@@ -33,10 +50,30 @@ export async function POST(req: NextRequest) {
       {
         qrCode,
         qrUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/q/${qrCode}`,
+        message: "QR created successfully",
       },
       { status: 201 },
     );
   } catch (err: any) {
+    if (err.code === 11000) {
+      // Mongo unique index violation (race condition safety)
+      const existingQR = await QRCode.findOne({
+        ownerId: user.userId,
+        status: "ACTIVE",
+      }).lean();
+
+      if (existingQR) {
+        return NextResponse.json(
+          {
+            qrCode: existingQR.code,
+            qrUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/q/${existingQR.code}`,
+            message: "QR already exists",
+          },
+          { status: 200 },
+        );
+      }
+    }
+
     if (err.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

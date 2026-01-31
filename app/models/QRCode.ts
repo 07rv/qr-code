@@ -24,6 +24,12 @@ const QRCodeSchema = new Schema(
 );
 
 // Compound index for future queries
-QRCodeSchema.index({ ownerId: 1, createdAt: -1 });
+QRCodeSchema.index(
+  { ownerId: 1, createdAt: -1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: "ACTIVE" },
+  },
+);
 
 export default mongoose.models.QRCode || mongoose.model("QRCode", QRCodeSchema);
