@@ -34,7 +34,7 @@ const Navbar = () => {
           <a className="transition hover:text-gray-300" href="#docs">
             Docs
           </a>
-          <a className="btn glass" href="#!">
+          <a className="btn glass" href="/auth/signup">
             Sign Up
           </a>
         </div>
@@ -68,7 +68,7 @@ const Navbar = () => {
         <a href="#use-cases">Use Cases</a>
         <a href="#pricing">Pricing</a>
         <a href="#docs">Docs</a>
-        <a className="btn glass" href="/">
+        <a className="btn glass" href="/auth/signup">
           Sign Up
         </a>
         <button id="close-btn" className="rounded-md p-2 glass">
